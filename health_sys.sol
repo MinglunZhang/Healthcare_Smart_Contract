@@ -65,9 +65,9 @@ contract healthSys {
     // check if account is system
     function contains (address _account) public view returns (bool, uint256) {
         for (uint256 i = 0; i < accounts.length; i++) {
-            if (_address == accounts[i]) return (true, i);
+            if (_account == accounts[i]) return (true, i);
         }
-        return (false, -1);
+        return (false, 0);
     }
     // return the share of each account/user
     function sharesOf (address _owner) public view returns (uint256 balance) {
@@ -103,14 +103,14 @@ contract healthSys {
     }
     // set tax
     function setTax (uint8 _tax) public isIssuer {
-        require( _<= 100, "Tax Rate should be in range of 0% to 100%");
+        require( _tax <= 100, "Tax Rate should be in range of 0% to 100%");
         tax = _tax;
         emit ChangedTax (tax);
     }
     // give the user shares for their personal info
     function setShares (address _account, uint256 share) public isIssuer {
         (bool _contains, ) = contains(_account);
-        if (contains && tokenLeft() > share) {
+        if (_contains && tokenLeft() > share) {
             shares[_account] += share;
         }
     }
@@ -119,12 +119,12 @@ contract healthSys {
         uint256 _payment = payment;
         uint256 undistributedToken = tokenLeft();
         // issuer receives the undistributed money
-        issuerEtherReceived = _payment * undistributedToken / totalTokens;
+        uint256 issuerEtherReceived = _payment * undistributedToken / totalTokens;
         revenues[issuer] += issuerEtherReceived;
         payment -= issuerEtherReceived;
         emit RevenuesDistributed(issuer, issuerEtherReceived, revenues[issuer]);
         for (uint256 i = 0; i < accounts.length; i++) {
-            address account = accounts[s];
+            address account = accounts[i];
             uint256 _shares = sharesOf(account);
             uint256 etherReceived = _payment * _shares / totalTokens;
             revenues[account] += etherReceived;
@@ -135,16 +135,16 @@ contract healthSys {
     // Buyer buys data
     function payForData() public payable isBuyer {
         // 1:1 payment for better calculate
-        uint256 payment = _totalTokens;
+        uint256 payment = totalTokens;
         require (msg.value == payment);
-        taxGain = msg.value * tax / 100;
+        uint256 taxGain = msg.value * tax / 100;
         payment += msg.value - taxGain;
         revenues[issuer] += taxGain;
         emit DataPurchased(msg.sender, msg.value, taxGain, msg.value - taxGain);
     }
     
-    // return ether back to origin
-    receive() external payable {
-        (msg.sender).transfer(msg.value);   
-    }
+    // // return ether back to origin
+    // receive() external payable {
+    //     (msg.sender).transfer(msg.value);   
+    // }
 }
