@@ -5,14 +5,14 @@ contract healthSys {
     // tax to be issued for each transaction
     uint8 public tax;
     // the total tokens offered by data pool
-    uint8 public totalTokens
+    uint8 public totalTokens;
     // the total amount of payment
     uint256 public payment;
     // the 564 team
     address public issuer;
     // the third party data buyer
     address public buyer;
-    // the data providers
+    // the data providers and the issuer
     address[] public accounts;
     // the name of the token
     string public name;
@@ -25,11 +25,12 @@ contract healthSys {
     mapping (address => uint256) public shares;
 
     // events
+    event CurrentBuyer (address account);
     event AddAccount (address account);
     event RemoveAccount (address account);
-    event ChangedTax (uint8 tax)
-    event RevenuesDistributed(address account, uint256 etherReceived, uint256 totalRevenue)
-    event DataPurchased(address buyer, uint256 amountPaid, uint256 taxGain, uint256 revenueGain);
+    event ChangedTax (uint8 tax);
+    event RevenuesDistributed (address account, uint256 etherReceived, uint256 totalRevenue);
+    event DataPurchased (address buyer, uint256 amountPaid, uint256 taxGain, uint256 revenueGain);
 
 
 
@@ -47,19 +48,16 @@ contract healthSys {
     
     
     
-    // check if 
+    // check if msg is from ourside
     modifier isIssuer {
         require(msg.sender == issuer);
         _;
     }
+    // check if msg is from third party buyer
     modifier isBuyer {
         require(msg.sender == buyer);
         _;
     }
-//     modifier isMultipleOf{
-// 	   require(msg.value % totalSupply2 == 0);              //modulo operation, only allow ether ammounts that are multiles of totalsupply^2. This is because there is no float and we will divide incoming ammounts two times to split it up and we do not want a remainder.
-// 	    _;
-// 	}
     
     
     
@@ -98,6 +96,11 @@ contract healthSys {
         }
         emit RemoveAccount (_account);
     }
+    // set buyer to decide who can by the data
+    function setBuyer(address _buyer) public isIssuer {
+        buyer = _buyer;
+        emit CurrentBuyer(buyer);
+    }
     // set tax
     function setTax (uint8 _tax) public isIssuer {
         require( _<= 100, "Tax Rate should be in range of 0% to 100%");
@@ -115,7 +118,7 @@ contract healthSys {
     function distribute() public isIssuer {
         uint256 _payment = payment;
         uint256 undistributedToken = tokenLeft();
-        // our side reiceive the undistributed money
+        // issuer receives the undistributed money
         issuerEtherReceived = _payment * undistributedToken / totalTokens;
         revenues[issuer] += issuerEtherReceived;
         payment -= issuerEtherReceived;
