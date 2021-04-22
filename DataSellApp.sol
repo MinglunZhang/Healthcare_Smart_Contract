@@ -60,7 +60,7 @@ contract DataSellApp {
         require(msg.sender == buyer, "not the buyer");
         _;
     }
-    
+
     // set the address of buyer
     function setBuyer (address _address) public isIssuer {
         buyer = _address;
@@ -107,11 +107,12 @@ contract DataSellApp {
     // but we do collect undistributed balance in our wallet :)
     function pay () public payable isBuyer {
         balance = msg.value;
+        uint _balance = balance;
         // distribute to every providers
         for (uint i = 0; i < providers.length; i++) {
             address account = providers[i];
             uint token = token_book[account];
-            uint paid = balance * token / tokens;
+            uint paid = _balance * token / tokens;
             balance = balance - paid;
             balance_book[account] = paid;
             token_book[account] = 0;
