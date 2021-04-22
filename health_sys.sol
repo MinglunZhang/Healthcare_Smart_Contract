@@ -9,7 +9,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 // fintech 564 project
-contract DataSellApp {
+contract health_sys {
     
     // how we make profits
     uint public tax_rate;
